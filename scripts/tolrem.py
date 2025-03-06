@@ -3,11 +3,12 @@ import tweepy
 import os, sys
 import requests
 
+import urllib.request
+import hashlib, hmac, urllib3
+
 from config import *
 from glob import glob
-import urllib.request
 from time import sleep, time
-import hashlib, hmac, urllib3
 
 import pickle
 import telegram
