@@ -563,56 +563,33 @@ def send_activity(coin, msg): ### group orders report
     
     WR={}
     
-    channelID='-101161739329'
+    channelID='-'
     
-    aol = ['3245:AAGJbNcOJ8z24SdWgh1cFqnpCAkhBxKaePkA', # chimuelotrade_bot
-           '3245:AAHKyHKuvQQTbPt0Xh6dCqnj3IbbC986Z_5s', # guatitatrade_bot
-           '3245:AAFsP6Gli5071eB4XeIbuqOByRIgd5ASCl5s', # sandiatrade_bot
-           '3245:AAEqiH1BhenpRyhbh-quqfrxIwT2BGfAhjoo', # venturetrade_bot
-           '3245:AAGcBpRsWGF89x659qTu5Glwe0H5sGa90fOg', # venturetrade2_bot
-           '3245:AAHMs80agFR4AADPg4ljhujqkfAsz11NAPP0', # venturetrade3_bot
-           '3245:AAGnNpa1bYHaNRjPIw74t5jqnvmF-gFBWbtQ', # venturetrade4_bot
-           '3245:AAF-vC10Sx2j9WPuWEvXQyLiqlHxSBDohKkk', # venturetrade5_bot
-    ]
-    
-    # if coin not in list(WR.keys()):
-    #     token = np.random.choice(aol)
-    # else:
-    #     token = WR[coin]
+    aol = []
     
     token = np.random.choice(aol)
     bot = telegram.Bot(token=token) ### 1/8 bots 0.125 | to avoid to get timeout error
     bot.send_message(chat_id=channelID, text=msg)
 
-def alertaaaaa(bot='5008829909:AAGJbNcOJ8z24SdWgh1cFnpCAkhBxKaePkA',
+def alertaaaaa(bot='',
                mensaje='Done!'
                 ):
     bot = telegram.Bot(token=bot)
-    que = bot.send_message(chat_id=1376175920, text=mensaje)
+    que = bot.send_message(chat_id=, text=mensaje)
 
 async def send_activity_2(msg): ### errors report
-    tokens = ["3245:AAHW2FOOWNWFzAUZahg--4cuQni6ZaHNvUKU", # altertaspendejas_bot
-              '3245:AAEC8J5c9OeXskgPWFasoVWfM1ME34AEWfFM', # alertaspendejas_bot
-              '3245:AAF-_k1nEWy1WmeGsXvacF52tgTnN6R21O0U', # alertaspendejas2_bot
-              '3245:AAF9lbWOQ63SpRIBR3zEaJffieJyIG--_z4s', # alertaspendejas3_bot
-              '3245:AAHsvC9ElSQpP5AhMypsaMYsQ6gqkzuRnCxM'  # watermelontrade_bot
-              ]
+    tokens = []
               
     token = np.random.choice(tokens)
     bot2 = telegram.Bot(token=token)
-    await bot2.send_message(chat_id='-1001635116349', text=msg)
+    await bot2.send_message(chat_id='-', text=msg)
     
 def send_activity2(msg): ### errors report
-    tokens = ["3453:AAHW2FOOWNWFzAUZhg--4cuQnfvei6ZaHNvUKU", # altertaspendejas_bot
-              '3245:AAEC8J5c9OeXskgPWFsoVWfM1eveME34AEWfFM', # alertaspendejas_bot
-              '3245:AAF-_k1nEWy1WmeGsXvcF52tgdgvTnN6R21O0U', # alertaspendejas2_bot
-              '3243:AAF9lbWOQ63SpRIBR3zEJffiefvvJyIG--_z4s', # alertaspendejas3_bot
-              '3244:AAHsvC9ElSQpP5AhMypsMYsQvfd6gqkzuRnCxM'  # watermelontrade_bot
-              ]
+    tokens = []
               
     token = np.random.choice(tokens)
     bot2 = telegram.Bot(token=token)
-    bot2.send_message(chat_id='-1001635116349', text=msg)
+    bot2.send_message(chat_id='-', text=msg)
 
 def current_5p(client, par='USDT'):
     asset = [i for i in client.futures_account_balance() if par in list(i.values())][0]
