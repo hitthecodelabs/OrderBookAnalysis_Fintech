@@ -124,3 +124,152 @@ The `vannamei` class contains two distinct methods, `__white__` and `__lotus__`,
     *   Potentially intended for data collection, feature engineering validation, or as a data preprocessing step for a separate trading system or model.
 
 The presence of these two methods suggests a phased development approach, where `__lotus__` might represent an earlier stage focused on data and feature engineering, while `__white__` represents a more advanced stage aiming for full automated trading functionality.
+
+## Dependencies and Setup
+
+To run this script, you will need to install the following Python libraries and configure the necessary API keys and settings:
+
+### 1. Python Libraries
+
+Install all required Python packages using `pip`:
+
+```bash
+pip install shutil tweepy requests glob urllib3 pickle telegram numpy polars pandas python-dateutil matplotlib scikit-learn pybit apollox pathlib
+```
+
+### 2. `config.py` Configuration File
+
+Create a file named `config.py` in the same directory as the script and populate it with your API keys and tokens. Do not commit `config.py` to version control as it contains sensitive information.
+
+```python
+# config.py
+
+# Twitter API Keys (for tweet notifications - optional)
+apikey = "YOUR_TWITTER_API_KEY"
+apisecrets = "YOUR_TWITTER_API_SECRET_KEY"
+accesstoken = "YOUR_TWITTER_ACCESS_TOKEN" # (If needed, for user-authenticated API access)
+accesssecret = "YOUR_TWITTER_ACCESS_SECRET_TOKEN" # (If needed)
+
+# Bybit API Keys (for trading on Bybit)
+bybit_api_key = "YOUR_BYBIT_API_KEY"
+bybit_api_secret = "YOUR_BYBIT_API_SECRET_KEY"
+
+# Telegram Bot Tokens (for Telegram notifications)
+telegram_bot_tokens = [
+    "YOUR_TELEGRAM_BOT_TOKEN_1",
+    "YOUR_TELEGRAM_BOT_TOKEN_2", # Add more tokens for load balancing
+]
+telegram_error_bot_tokens = [ # Separate tokens for error reporting
+    "YOUR_TELEGRAM_ERROR_BOT_TOKEN_1",
+    "YOUR_TELEGRAM_ERROR_BOT_TOKEN_2",
+]
+
+# Coin-Specific Telegram Channel Mappings (for trade reports)
+WR = {
+    'BTC': 'YOUR_TELEGRAM_CHANNEL_ID_BTC',
+    'ETH': 'YOUR_TELEGRAM_CHANNEL_ID_ETH',
+}
+```
+
+### 3. Pre-trained Machine Learning Models and Scalers
+
+#### Model Files
+You will need to train your own Keras/TensorFlow machine learning models externally. The script expects model files (e.g., `.h5` format) to be located in a directory structure accessible by the `get_utils` function. The file naming convention is important for the script to correctly load the models and scalers.
+
+#### Scaler Files
+Corresponding `StandardScaler` objects, fitted on your training data, should be saved as CSV files (e.g., using `polars.write_csv` with `"|"` separator) in the same directory as the model files, following a specific naming convention (e.g., replacing `model_` with `scaler_` and `.h5` with `.csv`).
+
+Ensure that the `get_utils` function in the script correctly points to the directory where your models and scalers are stored. You might need to adjust file paths in the glob patterns within `get_utils`.
+
+### 4. Bybit API Account and Keys
+
+- Create an account on the Bybit cryptocurrency exchange (https://www.bybit.com).
+- Generate API keys for futures trading within your Bybit account settings.
+- Ensure the API keys have the necessary permissions for trading (order placement, position management, balance retrieval).
+
+### 5. Telegram Bot and Channel Setup
+
+- Create Telegram bots using [BotFather](https://telegram.me/BotFather) and obtain API tokens.
+- Create Telegram channels (public or private) where you want to receive trade notifications and error reports.
+- Obtain the channel IDs for these channels.
+
+### 6. Twitter API Account and Keys (Optional)
+
+- If you intend to use Twitter notifications, create a Twitter Developer account ([Twitter Developer](https://developer.twitter.com/)).
+- Generate API keys and tokens for your Twitter application.
+
+## Usage Instructions
+
+### 1. Configure `config.py`
+Carefully fill in all API keys, Telegram bot tokens, Twitter API credentials, and channel IDs in the `config.py` file. Double-check that all keys and tokens are correct.
+
+### 2. Install Dependencies
+Run the following command to install all required Python libraries:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Prepare Models and Scalers
+Ensure your pre-trained machine learning models and scalers are saved in the appropriate directory structure and that the file paths in `get_utils` are correctly configured.
+
+### 4. Choose Operation Mode
+Decide whether to run the bot in `white` mode (full trading functionality) or `lotus` mode (focused on data and feature extraction). Modify the script to call the desired `vannamei` method with appropriate parameters.
+
+### 5. Run the Script
+Execute the script from your terminal:
+
+```bash
+python tolrem.py
+```
+
+Modify the script's main execution block to instantiate the `vannamei` class and call `white` or `lotus` with the necessary parameters.
+
+### 6. Monitor and Analyze
+- Monitor the bot's operation, performance, and notifications (Telegram, Twitter).
+- Analyze the logged data (CSV files) to evaluate trading performance, identify areas for improvement, and retrain models if necessary.
+
+## Example Code Snippet
+
+```python
+if __name__ == "__main__":
+    from binance.client import Client as BinanceClient
+    from pybit import usdt_perpetual
+
+    binance_client = BinanceClient(api_key=binance_api_key, api_secret=binance_api_secret)
+    bybit_session = usdt_perpetual.HTTP(
+        endpoint="https://api.bybit.com",
+        api_key=bybit_api_key,
+        api_secret=bybit_api_secret
+    )
+
+    model_utils, model_files = get_utils(coin="BTC", minutos=9, fecha="...", y="...")
+
+    params_white = {
+        'client': binance_client,
+        'W': None,
+        'coin': 'BTC',
+        'pair': 'USDT',
+        'model': model_utils[0],
+        'scaler': model_utils[1],
+        'exchange': 'Bybit',
+        'lvg': 4,
+    }
+
+    bot_instance = vannamei()
+    bot_instance.__white__(params_white)
+```
+
+## Important Considerations and Disclaimer
+
+1. **Model Training is External:** This script does not include model training. Train your own machine learning models using appropriate datasets and techniques.
+2. **Backtesting and Optimization:** Thoroughly backtest your trading strategy using historical data before live deployment.
+3. **Paper Trading:** Test the bot in a paper trading environment before trading with real funds.
+4. **Risk Management:** Implement robust risk management strategies, including position sizing, stop-loss orders, and leverage management.
+5. **Regular Monitoring:** Continuously monitor the bot's performance and be prepared to intervene manually if necessary.
+6. **Market Volatility:** Cryptocurrency markets are highly volatile. No trading algorithm guarantees profits.
+7. **Code Understanding is Essential:** Do not use this script blindly. Understand its functionality before deploying it.
+8. **Legal Compliance:** Ensure that your trading activities comply with legal and regulatory requirements in your jurisdiction.
+
+This documentation provides a comprehensive overview of the script. Adapt and expand upon it further as needed. Good luck, and trade responsibly!
+
