@@ -781,38 +781,74 @@ def open_order0(coin, y_pred, client, clientf, p=0.10, leverage=10, par='USDT', 
                 return dicc, 'SELL', 'BUY', r_qty, c_apal, precio_actual, d
 
 def open_order(coin, y_pred, client, session, p=0.125, leverage=10, par='USDT', dec=0, value=0):
+    """
+    Creates and configures a trading order based on prediction and market data.
     
-    L = []
+    Parameters:
+        coin (str): The cryptocurrency symbol (e.g., 'BTC', 'ETH')
+        y_pred (int): Prediction value (1 for long position, 2 for short position)
+        client: Trading client instance for API interactions
+        session: Session object for market data access
+        p (float): Price percentage offset for liquidation calculation (default: 0.125)
+        leverage (int): Leverage multiplier for position (default: 10)
+        par (str): Quote currency pair (default: 'USDT')
+        dec (int): Decimal precision override (default: 0)
+        value (float): Dollar value to speculate (default: 0)
     
-    # precio_actual = float(client.futures_symbol_ticker(symbol=f'{coin}{par}')['price']) ### current price
+    Returns:
+        tuple: Contains order dictionary and position details:
+            - dicc: Order configuration dictionary
+            - entry_side: 'BUY' or 'SELL' for entry position
+            - exit_side: 'SELL' or 'BUY' for exit position
+            - r_qty: Rounded quantity to trade
+            - c_apal: Calculated leveraged amount
+            - precio_actual: Current market price
+            - minDecL: Minimum decimal places for quantity
+    
+    Raises:
+        None explicitly, but may propagate exceptions from called functions
+    """
+    
+    L = []  # Unused list, possibly for future logging
+    
+    # Fetch current market data for the symbol
     symbolInfo = session.latest_information_for_symbol(symbol=f'{coin}{par}')
     coinInfo = symbolInfo['result'][0]
     arr_BA = np.array([coinInfo['bid_price'], coinInfo['ask_price']], dtype=np.float64)
+    
+    # Determine position and price based on prediction
     precio_actual = 0
     possi = ''
-    if y_pred==1:
-        precio_actual += arr_BA[0]
+    if y_pred == 1:
+        precio_actual += arr_BA[0]  # Use bid price for long position
         possi = 'long'
-    elif y_pred==2:
-        precio_actual += arr_BA[1]
+    elif y_pred == 2:
+        precio_actual += arr_BA[1]  # Use ask price for short position
         possi = 'short'
     
-    cantidad, c_apal = to_speculate(qty=value, ### $
-                                    curr_price=precio_actual,
-                                    leverage=leverage ### xL.
-                                    ) ### with all decimals
+    # Calculate speculation amount and leveraged quantity
+    cantidad, c_apal = to_speculate(qty=value,          # Dollar amount to trade
+                                  curr_price=precio_actual,  # Current price
+                                  leverage=leverage)        # Leverage multiplier
     
-    minQty, minDecL, sl_ro = get_min_dec(coin, session) ### qty, decimals | <0 to add zeros
-    r_qty = round(cantidad, minDecL) ### rounded qty to specific coin
-    liqPrice, limitLiq = calc_liq_price(coin, precio_actual, leverage, possi, p=p) ### get liquidations info
-    sl = round(limitLiq, sl_ro) ### liq rounded
+    # Get minimum quantity and decimal requirements for the coin
+    minQty, minDecL, sl_ro = get_min_dec(coin, session)  # Returns qty, decimals, and rounding
     
+    # Round quantity to coin-specific decimal places
+    r_qty = round(cantidad, minDecL)
+    
+    # Calculate liquidation price and limit
+    liqPrice, limitLiq = calc_liq_price(coin, precio_actual, leverage, possi, p=p)
+    sl = round(limitLiq, sl_ro)  # Round liquidation price
+    
+    # Generate order configuration
     dicc, toopen, toclose = sign_order(coin, y_pred, r_qty, sl, session, par)
     
-    if y_pred==1:
-        return dicc, 'BUY', 'SELL', r_qty, c_apal, precio_actual, minDecL
-    elif y_pred==2:
-        return dicc, 'SELL', 'BUY', r_qty, c_apal, precio_actual, minDecL
+    # Return appropriate order details based on position type
+    if y_pred == 1:
+        return dicc, 'BUY', 'SELL', r_qty, c_apal, precio_actual, minDecL  # Long position
+    elif y_pred == 2:
+        return dicc, 'SELL', 'BUY', r_qty, c_apal, precio_actual, minDecL  # Short position
 
 def cerrar_orden0(coin, cerrar, QTY, par, clientf):
     order = clientf.new_order(
