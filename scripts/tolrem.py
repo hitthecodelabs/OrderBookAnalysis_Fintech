@@ -142,48 +142,65 @@ def pump_it_up(B, A, K):
     return B_vol, A_vol#, B_k, A_k
 
 def cheeseBinance(depth,
-            # [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25, 30, 35, 40, 45, 50, 100, 250] | 24
-            players = [5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200], ### | 13
-            limit=500
-            # limit=250
-            ):
+                  players=[5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200],  ### | 13
+                  limit=500):
+    """
+    Processes Binance order book data into a structured string representation.
     
-    # bid_, ask_, dlevels = norm_order_book(depth) ### (b, a), (%b, %a; at 250 levels) ### dlevels => [:250]
-    # bid, ask = real_levels2(bid_, ask_, levels=limit)
-    ### [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25, 30, 35, 40, 45, 50, 100, 250]
+    This function analyzes bid and ask levels, calculates spreads and volume metrics,
+    and formats the results for multiple depth levels, optimized for market depth analysis.
     
-    bid = np.array(depth['bids']).astype(np.float64)
-    ask = np.array(depth['asks']).astype(np.float64)
-    a_prices_ = ask[:, 0]
-    b_prices_ = bid[:, 0]
+    Parameters:
+        depth (dict): Binance order book data with 'bids', 'asks', and 'T' (timestamp)
+        players (list): Depth levels to analyze (default: [5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200])
+        limit (int): Maximum number of order book entries to process (default: 500)
     
-    spread = 100*(a_prices_[0] - b_prices_[0])/b_prices_[0]
+    Returns:
+        tuple: Processed order book data:
+            - tt (float): Timestamp of the order book snapshot
+            - linea (str): Pipe-delimited string of timestamp, spread, and depth metrics
+            - str: Exchange identifier ('Binance')
     
-    dlevels = [];wtf = [5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250]
+    Notes:
+        - Calculates percentage spread between best bid and ask
+        - Analyzes volume and price differences at specified depth levels
+        - Includes additional metrics at 250 levels
+    """
+    
+    # Extract and convert bid/ask data to numpy arrays
+    bid = np.array(depth['bids']).astype(np.float64)  # [price, quantity] pairs
+    ask = np.array(depth['asks']).astype(np.float64)  # [price, quantity] pairs
+    a_prices_ = ask[:, 0]  # Ask prices
+    b_prices_ = bid[:, 0]  # Bid prices
+    
+    # Calculate percentage spread between best bid and ask
+    spread = 100 * (a_prices_[0] - b_prices_[0]) / b_prices_[0]
+    
+    # Compute percentage price differences at various depth levels
+    dlevels = []
+    wtf = [5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250]  # Full set of levels including 250
     for ww in wtf:
-        dbid, dask = perc_diff(b_prices_, a_prices_, ww) ### -% | +%
+        dbid, dask = perc_diff(b_prices_, a_prices_, ww)  # Bid and ask % differences
         dlevels.append([dbid, dask])
     
+    # Extract timestamp
     tt = depth['T']
-    ### order book
+    
+    # Build formatted string with volume and price metrics
     linea = ""
-    for i, p in enumerate(players):
-        B_vol, A_vol = pump_it_up(bid, ask, p)
-        b_i, a_i = dlevels[i]
-        linea += f"{B_vol}|{A_vol}|{b_i}|{a_i}|"
-        
-        # total = B_vol + A_vol
-        # relB, relA = B_vol/total, A_vol/total
-        # linea += f"{relB}|{relA}|{b_i}|{a_i}|"
+    for i, p in enumerate(players):  # Iterate over specified depth levels
+        B_vol, A_vol = pump_it_up(bid, ask, p)  # Calculate bid and ask volumes
+        b_i, a_i = dlevels[i]  # Corresponding price differences
+        linea += f"{B_vol}|{A_vol}|{b_i}|{a_i}|"  # Append to string
     
-    B_vol, A_vol = pump_it_up(bid, ask, 250)
-    b250, a250 = dlevels[-1]
-    linea += f"{B_vol}|{A_vol}|{b250}|{a250}\n"
+    # Add metrics for 250 levels
+    B_vol, A_vol = pump_it_up(bid, ask, 250)  # Volume at max depth
+    b250, a250 = dlevels[-1]  # Price differences at 250
+    linea += f"{B_vol}|{A_vol}|{b250}|{a250}\n"  # Final segment
     
-    # total = B_vol + A_vol
-    # relB, relA = B_vol/total, A_vol/total
-    # linea += f"{relB}|{relA}|{b250}|{a250}\n"
+    # Prepend timestamp and spread to the output string
     linea = f"{tt}|{spread}|{linea}"
+    
     return tt, linea, 'Binance'
 
 def cheeseOKX_Kucoin(depth,
