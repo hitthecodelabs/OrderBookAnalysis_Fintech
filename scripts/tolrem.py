@@ -1571,41 +1571,78 @@ def get_vekctor(dicc, llave, headder, _col_v, _c_r, _cor_v):
     return V, _sspread, l_r, l_v
     
 def vektor_line(coin, dicc, last_xtime, nokeys, allkeys, c_head, col_v, c_r, cor_v, xtaim, minutos, client):
+    """
+    Constructs a vector line representation combining current market data with historical vectors.
+    
+    This function integrates real-time price differences, historical averages, and vector components
+    to create a comprehensive data line for analysis or logging.
+    
+    Parameters:
+        coin (str): Cryptocurrency symbol (e.g., 'BTC', 'ETH')
+        dicc (dict): Data dictionary containing klines and average vectors
+        last_xtime (str): Key for the most recent time period
+        nokeys (list): List of keys for average vector data
+        allkeys (list): Complete list of time period keys
+        c_head (list): Column headers for vector construction
+        col_v (list): Volume-related column names
+        c_r (list): Relation vector column names
+        cor_v (list): Variation vector column names
+        xtaim (str): Target time identifier
+        minutos (int): Time period in minutes
+        client: Trading client instance for API interactions
+    
+    Returns:
+        tuple: Vector array and formatted string:
+            - arr_v (np.ndarray): Numerical vector of relations and variations
+            - s_cadena (str): Comma-separated string of all components
+    
+    Raises:
+        KeyError: If expected dictionary keys are missing
+    """
+    
+    # Get initial vectors from current data
     V0, spr0, lr0, lv0 = get_vekctor(dicc, last_xtime, c_head, col_v, c_r, cor_v)
-
-    curr_price = dicc['klines'][last_xtime][0] ### actual open
+    
+    # Fetch current price data and calculate percentage difference
+    curr_price = dicc['klines'][last_xtime][0]  # Opening price from klines
     stcker = client.futures_symbol_ticker(symbol=f'{coin}USDT')
-    price = float(stcker['price'])
-    diff0 = 100*(price-curr_price)/curr_price
+    price = float(stcker['price'])  # Current market price
+    diff0 = 100 * (price - curr_price) / curr_price  # Percentage change
 
-
+    # Initialize lists for historical relations, variations, and differences
     RR, VV, DD = [], [], []
-    for i, key_ in enumerate(nokeys[1:]): ### [1, 2, 3, ..., 9)
+    
+    # Aggregate historical average vectors (excluding first key)
+    for i, key_ in enumerate(nokeys[1:]):  # Process keys [1, 2, 3, ..., 9)
         _, rr, vv = dicc['avg'][key_]
-        RR += rr
-        VV += vv
+        RR += rr  # Append relation values
+        VV += vv  # Append variation values
 
-    for i in range(len(allkeys)-1):
+    # Calculate price differences across all time periods
+    for i in range(len(allkeys) - 1):
         key_0 = allkeys[i]
-        key_1 = allkeys[i+1]
-        p_0 = dicc['klines'][key_0][0] ### initial
-        p_1 = dicc['klines'][key_1][0] ### final
-        diff_x = 100*(p_1-p_0)/p_0
+        key_1 = allkeys[i + 1]
+        p_0 = dicc['klines'][key_0][0]  # Initial price
+        p_1 = dicc['klines'][key_1][0]  # Final price
+        diff_x = 100 * (p_1 - p_0) / p_0  # Percentage change
         DD.append(diff_x)
 
-    RR += lr0
-    VV += lv0
-    DD.append(diff0)
+    # Combine current vectors with historical data
+    RR += lr0  # Add current relations
+    VV += lv0  # Add current variations
+    DD.append(diff0)  # Add current price difference
 
-    L0 = [xtaim, coin, minutos, spr0]
-    L1 = RR + VV
-    # L1 = [spr0] + RR + VV ### soon
-    L2 = L0 + DD + L1
-    arr_l = np.array(L2, dtype=str)
-    arr_v = np.array(L1)
-    s_cadena = ",".join(arr_l)
+    # Construct output components
+    L0 = [xtaim, coin, minutos, spr0]  # Base info: time, coin, period, spread
+    L1 = RR + VV  # Combined relations and variations
+    L2 = L0 + DD + L1  # Full data sequence
+    
+    # Convert to arrays and string format
+    arr_l = np.array(L2, dtype=str)  # All components as strings
+    arr_v = np.array(L1)  # Numerical vector of relations and variations
+    s_cadena = ",".join(arr_l)  # Comma-separated output string
+    
     return arr_v, s_cadena
-
 class vannamei():
 
     def __white__(params):
