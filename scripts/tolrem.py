@@ -1340,26 +1340,53 @@ def order_book_filee(coin, bp, client,
     return tt, dtime_str, linex, exch
     
 def order_book_file(coin, bp, client,
-                            filename1='', ### temporal current
-                            filename2='', ### complete current
-                            limit=500,
-                            dex='Binance'
-                            ):
+                    filename1='',  ### temporal current
+                    filename2='',  ### complete current
+                    limit=500,
+                    dex='Binance'):
+    """
+    Retrieves and processes Binance order book data for a specified cryptocurrency pair.
     
-    if dex=='Binance':
-        if bp=='USD_PERP':
-            depth = client.futures_coin_order_book(symbol=f'{coin}{bp}') ### order book | COIN
-        elif bp=='USDT' or bp=='BUSD':
-            depth = client.futures_order_book(symbol=f'{coin}{bp}') ### order book | USD
+    This function fetches order book data from Binance, processes it, and returns structured
+    information including timestamp and formatted data string. It currently supports only
+    Binance exchange operations.
+    
+    Parameters:
+        coin (str): Cryptocurrency symbol (e.g., 'BTC', 'ETH')
+        bp (str): Base pair/currency type ('USD_PERP', 'USDT', or 'BUSD')
+        client: Binance trading client instance for API interactions
+        filename1 (str): Path to temporary output file (default: '')
+        filename2 (str): Path to complete output file (default: '')
+        limit (int): Number of order book entries to retrieve (default: 500)
+        dex (str): Exchange identifier, must be 'Binance' (default: 'Binance')
+    
+    Returns:
+        tuple: Processed order book information containing:
+            - tt (float): Raw timestamp
+            - dtime_str (str): Formatted datetime string in nanoseconds
+            - linex (str): Processed order book data string
+            - exch (str): Exchange identifier ('Binance')
+    
+    Raises:
+        ValueError: If dex is not 'Binance' (implicit, as no other cases are handled)
+        KeyError: If client API response lacks expected structure
+    """
+    
+    if dex == 'Binance':
+        # Fetch order book data based on base pair type
+        if bp == 'USD_PERP':
+            depth = client.futures_coin_order_book(symbol=f'{coin}{bp}')  # Coin-margined futures
+        elif bp in ['USDT', 'BUSD']:
+            depth = client.futures_order_book(symbol=f'{coin}{bp}')  # USD-margined futures
         
-        ### prepo de cheese | current
-        tt, linex, exch = cheeseBinance(depth, limit=limit) ### current
-        residuo = float(tt)%60000
-        tt2 = float(tt) - residuo
-        # dtime_str = str(np.array([tt2*1e6]).astype('datetime64[ns]')[0])
-        dtime_str = str(np.array([tt2*1e6]).astype('datetime64[ns]')[0])
+        # Process raw order book data
+        tt, linex, exch = cheeseBinance(depth, limit=limit)  # Transform into structured format
+        residuo = float(tt) % 60000  # Calculate remainder for timestamp adjustment
+        tt2 = float(tt) - residuo  # Adjusted timestamp
+        # Convert to nanosecond-precision datetime string
+        dtime_str = str(np.array([tt2 * 1e6]).astype('datetime64[ns]')[0])
     
-    # return tt, linea, tt2, linea2
+    # Return processed data
     return tt, dtime_str, linex, exch
     
 def dict_data(tt, linea, dG):
