@@ -1261,65 +1261,82 @@ def get_low_high(df, clusters=12, maxim=9, c_pass=6):
     return levelss, arr_dif
     
 def order_book_filee(coin, bp, client,
-                            filename1='', ### temporal current
-                            filename2='', ### complete current
-                            limit=500,
-                            dex='',
-                            client2=None
-                            ):
+                    filename1='',  ### temporal current
+                    filename2='',  ### complete current
+                    limit=500,
+                    dex='',
+                    client2=None):
+    """
+    Retrieves and processes order book data from various cryptocurrency exchanges.
     
-    # url = f'https://fapi.binance.com/fapi/v1/depth?symbol={coin}{bp}&limit={limit}'
+    Parameters:
+        coin (str): Cryptocurrency symbol (e.g., 'BTC', 'ETH')
+        bp (str): Base pair/currency type (e.g., 'USDT', 'USD_PERP')
+        client: Primary exchange client instance for API interactions
+        filename1 (str): Path to temporary output file (default: '')
+        filename2 (str): Path to complete output file (default: '')
+        limit (int): Number of order book entries to retrieve (default: 500)
+        dex (str): Exchange identifier ('Binance', 'OKX', etc.) (default: '')
+        client2: Secondary client instance for specific exchanges (default: None)
     
-    ### requests block
-    # cadena = requests.get(url).text
-    # depth = json.loads(cadena)
+    Returns:
+        tuple: Processed order book information containing:
+            - tt: Raw timestamp
+            - dtime_str: Formatted datetime string
+            - linex: Processed order book data string
+            - exch: Exchange identifier
     
-    # fp = urllib.request.urlopen(url)
-    # depth = json.loads(fp.read().decode("utf8"))
+    Raises:
+        requests.exceptions.RequestException: If API requests fail
+        KeyError: If expected response data structure is invalid
+    """
     
-    if dex=='Binance':
-        if bp=='USD_PERP':
-            depth = client.futures_coin_order_book(symbol=f'{coin}{bp}') ### order book | COIN
-        elif bp=='USDT' or bp=='BUSD':
-            depth = client.futures_order_book(symbol=f'{coin}{bp}') ### order book | USD
+    # Exchange-specific order book retrieval
+    if dex == 'Binance':
+        if bp == 'USD_PERP':
+            depth = client.futures_coin_order_book(symbol=f'{coin}{bp}')  # Fetch coin-margined futures
+        elif bp in ['USDT', 'BUSD']:
+            depth = client.futures_order_book(symbol=f'{coin}{bp}')  # Fetch USD-margined futures
         
-        ### prepo de cheese | current
-        tt, linex, exch = cheeseBinance(depth, limit=limit) ### current
-        residuo = float(tt)%60000
+        # Process Binance order book data
+        tt, linex, exch = cheeseBinance(depth, limit=limit)  # Transform raw data
+        residuo = float(tt) % 60000
         tt2 = float(tt) - residuo
         dtime_str = str(np.array([tt2*1e6]).astype('datetime64[ns]')[0])
-    elif dex=='OKX':
+    
+    elif dex == 'OKX':
+        # Fetch and process OKX order book
         dicc = requests.get(f'https://www.okex.com/api/v5/market/books?instId={coin}-USDT-SWAP&sz=300').json()
         depth = dicc['data'][0]
         tt, linex, exch = cheeseOKX_Kucoin(depth, cdx='OKX')
         exch = 'OKX'
-    elif dex=='Bitstamp':
+    
+    elif dex == 'Bitstamp':
+        # Fetch and process Bitstamp order book
         depth2 = requests.get(f'https://www.bitstamp.net/api/v2/order_book/{coin.lower()}usd').json()
         tt, linex, exch = cheeseBitstamp(depth2)
-    # elif dex=='Kucoin':
-    #     # client = Market(url='https://api-futures.kucoin.com')
-    #     depth = client2.l2_order_book(f"{coin.replace('BTC', 'XBT')}USDTM")
-    #     tt, linex, exch = cheeseOKX_Kucoin(depth, cdx='Kucoin')
-    #     exch = 'Kucoin'
-    elif dex=='Coinbase':
+    
+    elif dex == 'Coinbase':
+        # Fetch and process Coinbase order book
         dicc = requests.get(f"https://api.pro.coinbase.com/products/{coin}-USD/book?level=2").json()
         tt, linex, exch = cheeseCOIN(dicc)
-    elif dex=='Bybit':
+    
+    elif dex == 'Bybit':
+        # Fetch and process Bybit order book
         url = f'https://api.bybit.com/derivatives/v3/public/order-book/L2?category=linear&symbol={coin}USDT&limit=200'
         depth = requests.get(url).json()['result']
         tt, linex, exch = cheeseBybit(depth)
     
-    if filename1!='':
-        arch = open(filename1, "a+")
-        arch.write(linex)
-        arch.close()    
+    # Write to temporary file if specified
+    if filename1 != '':
+        with open(filename1, "a+") as arch:
+            arch.write(linex)
     
-    if filename2!='':
-        arch = open(filename2, "a+")
-        arch.write(linex)
-        arch.close()
+    # Write to complete file if specified
+    if filename2 != '':
+        with open(filename2, "a+") as arch:
+            arch.write(linex)
     
-    # return tt, linea, tt2, linea2
     return tt, dtime_str, linex, exch
     
 def order_book_file(coin, bp, client,
