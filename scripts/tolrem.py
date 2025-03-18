@@ -669,24 +669,52 @@ def get_min_dec(coin, session):
     return minQty, minDecL, sl_ro
 
 def calc_liq_price(coin, entryPrice, leverage, side, p=0.125):
+    """
+    Calculates liquidation price for a leveraged trading position in a cryptocurrency market.
+    
+    This function computes the liquidation price based on entry price, leverage, commission rates,
+    and position side, incorporating a safety margin. It's designed for fintech trading applications
+    where precise liquidation calculations are critical for risk management.
+    
+    Parameters:
+        coin (str): Cryptocurrency symbol (e.g., 'BTC', 'ETH')
+        entryPrice (float): Entry price of the position
+        leverage (float): Leverage multiplier (e.g., 10 for 10x)
+        side (str): Position type ('long' only currently supported)
+        p (float): Safety margin percentage as a decimal (default: 0.125, i.e., 12.5%)
+    
+    Returns:
+        tuple: Liquidation-related prices:
+            - p_4 (float): Base liquidation price before safety margin
+            - sl (float): Final liquidation price with safety margin applied
+    
+    Notes:
+        - Commission rates: 0.5% for BTC/ETH, 1.0% for other coins
+        - Currently supports only 'long' positions
+        - Safety margin (p) adjusts the liquidation price to provide a buffer
+    """
+    
+    # Define commission rates based on coin type
     coins = ['BTC', 'ETH']
     if coin in coins:
-        comission = 0.5
+        comission = 0.5  # Lower commission for major coins (0.5%)
     else:
-        comission = 1.0
-    p_0 = 100/leverage
-    p_1 = p_0 - comission
-    if side=='long':
-        p_2 = 100 - p_1
-        p_3 = p_2 / 100
-        p_4 = entryPrice*p_3
-        w = entryPrice - p_4
-        vv = w*(1-p)
-        sl = p_4 + vv
-        # print(p_2, p_3, p_4, w, vv, sl)
-        # print(p_4, w, vv, sl)
-        # print(p_4, vv, sl)
-        return p_4, sl
+        comission = 1.0  # Standard commission for other coins (1.0%)
+    
+    # Calculate base liquidation percentage
+    p_0 = 100 / leverage  # Initial liquidation threshold (% of margin)
+    p_1 = p_0 - comission  # Adjust for commission
+    
+    if side == 'long':
+        # Long position liquidation calculation
+        p_2 = 100 - p_1  # Remaining price percentage after liquidation threshold
+        p_3 = p_2 / 100  # Convert to decimal
+        p_4 = entryPrice * p_3  # Base liquidation price
+        w = entryPrice - p_4  # Price distance to liquidation
+        vv = w * (1 - p)  # Safety margin adjustment
+        sl = p_4 + vv  # Final liquidation price with safety buffer
+        
+        return p_4, sl  # Return base and adjusted liquidation prices
         
     elif side=='short':
         p_2 = 100 + p_1
