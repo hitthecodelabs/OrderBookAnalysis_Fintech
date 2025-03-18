@@ -411,6 +411,32 @@ def ds_heikin_zz(failneim,
                  client2=None ### binance
                  ):
     
+    """
+    Processes order book and kline data into a consolidated dataset for financial analysis.
+    
+    This function integrates order book metrics with kline data from either Binance or ApolloX,
+    resampling volume and variation metrics to a 60-second interval, suitable for trading strategy development.
+    
+    Parameters:
+        failneim (str): Path to the input CSV file containing order book data
+        client: Primary trading client (ApolloX by default)
+        dicc (dict): Mapping of minute intervals to kline identifiers (default: various timeframes)
+        frec (int): Frequency parameter (default: 1, currently unused)
+        dex (str): Exchange identifier ('Binance' or '' for ApolloX, default: '')
+        client2: Secondary client for Binance API (default: None)
+    
+    Returns:
+        tuple: Processed financial datasets:
+            - dw (pd.DataFrame): Combined DataFrame with kline, volume, and variation data
+            - do (pd.DataFrame): Kline data (Open, High, Low, Close)
+            - dspread (float): Latest mean spread value over 60-second intervals
+    
+    Notes:
+        - Assumes input CSV has pipe-delimited data
+        - Resamples metrics to 60-second intervals for consistency
+        - Supports both Binance futures and ApolloX kline data
+    """
+    
     drr = pl.read_csv(failneim, sep='|')
     dr = drr.to_pandas()
     spreadd = dr['spread'].to_list()[-1]
