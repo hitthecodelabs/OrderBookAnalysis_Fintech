@@ -1511,26 +1511,63 @@ def downl_data(dpbx, src, dst):
     dpbx.files_download_to_file(download_path=dst, path=src, rev=rev)
     
 def get_vekctor(dicc, llave, headder, _col_v, _c_r, _cor_v):
+    """
+    Computes mathematical vectors from order book data for analysis.
+    
+    This function processes raw data into three key vectors: spread, volume relations,
+    and price variations, performing normalization and aggregation operations.
+    
+    Parameters:
+        dicc (dict): Input dictionary containing order book data
+        llave (str): Key to access specific data within dicc['data']
+        headder (list): Column names for initial DataFrame
+        _col_v (list): Column names for volume-related data
+        _c_r (list): Column names for relation vector output
+        _cor_v (list): Column names for variation vector data
+    
+    Returns:
+        tuple: Mathematical vectors and components:
+            - V (np.ndarray): Concatenated vector of spread, relations, and variations
+            - _sspread (float): Mean spread value
+            - l_r (list): Volume relations vector as list
+            - l_v (list): Price variations vector as list
+    
+    Notes:
+        - Assumes input data contains pipe-delimited strings
+        - Timestamps are converted from microseconds to nanoseconds
+        - Volume relations are normalized against total sums
+    """
+    
+    # Parse and structure raw data into DataFrame
     dff = pd.DataFrame(dicc['data'][llave])[0].str.split("|", expand=True).astype(float)
     dff.columns = headder
-    dff['dtimes'] = (1e6*(dff['dtimes'])).astype('datetime64[ns]')
+    # Convert timestamp from microseconds to nanoseconds for datetime
+    dff['dtimes'] = (1e6 * dff['dtimes']).astype('datetime64[ns]')
 
+    # Calculate mean spread vector (single value)
     _sspread = float(dff['spread'].mean(axis=0))
-    _vector_s = [_sspread] ### spread
-    _resh = dff[_col_v] ### volumen columns
-    _resh2 = _resh.sum(axis=0)
-    _resh3 = _resh2.values.reshape(-1, 2)
-    _sume = _resh3.sum(axis=1).reshape(-1, 1) # T
-    _rell = _resh3/_sume
-    _df_rel = pd.DataFrame(_rell.reshape(1, -1), columns=_c_r)
-    _vector_r = _df_rel.values[0] ### relation vector
+    _vector_s = [_sspread]  # Spread vector initialization
 
-    _df_vr = dff[_cor_v].mean(axis=0)
-    _vector_v = _df_vr.values ### variations vector
+    # Compute volume relations vector
+    _resh = dff[_col_v]  # Extract volume-related columns
+    _resh2 = _resh.sum(axis=0)  # Sum across rows
+    _resh3 = _resh2.values.reshape(-1, 2)  # Reshape into pairs
+    _sume = _resh3.sum(axis=1).reshape(-1, 1)  # Total sum per pair for normalization
+    _rell = _resh3 / _sume  # Normalize volumes against totals
+    _df_rel = pd.DataFrame(_rell.reshape(1, -1), columns=_c_r)  # Format as DataFrame
+    _vector_r = _df_rel.values[0]  # Extract relation vector
 
+    # Compute variations vector
+    _df_vr = dff[_cor_v].mean(axis=0)  # Mean of variation columns
+    _vector_v = _df_vr.values  # Extract variation vector
+
+    # Convert to lists for concatenation
     l_r = _vector_r.tolist()
     l_v = _vector_v.tolist()
+    
+    # Combine all vectors into final mathematical representation
     V = np.array(_vector_s + l_r + l_v)
+    
     return V, _sspread, l_r, l_v
     
 def vektor_line(coin, dicc, last_xtime, nokeys, allkeys, c_head, col_v, c_r, cor_v, xtaim, minutos, client):
