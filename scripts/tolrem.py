@@ -614,7 +614,6 @@ def to_speculate(qty, curr_price, leverage=10):
     quantity = (qty/curr_price)*leverage
     return quantity, qty*leverage
 
-
 ### responsable de firmar ordenes
 def sign_order0(coin, y_pred, QTY, clientf, par='BUSD'):
     if y_pred==1:
