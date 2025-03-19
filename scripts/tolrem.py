@@ -428,15 +428,39 @@ def cheeseBybit(jjbook,
     return tt, linea, "Bybit"
 
 def stts(dw, 
-        # rangos=[10, 25, 50, 100, 250]
-        # rangos=[5, 10, 15, 25, 50, 100, 250]
-        # rangos = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25, 30, 35, 40, 45, 50, 100, 250]
-        rangos = [5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250]
-        ):
+         rangos=[5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250]):
+    """
+    Calculates bid and ask volume ratios for specified order book depth ranges.
+    
+    This function processes a DataFrame containing order book volume data,
+    computing the ratio of bid and ask volumes to total volume at various depth levels.
+    
+    Parameters:
+        dw (pandas.DataFrame): DataFrame containing volume data with columns
+            'volb_X' (bid volume) and 'vola_X' (ask volume) where X is each range value
+        rangos (list, optional): List of depth ranges to process.
+            Defaults to [5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200, 250]
+    
+    Returns:
+        pandas.DataFrame: Modified input DataFrame with added ratio columns:
+            'rb_X' (bid ratio) and 'ra_X' (ask ratio) for each range value X
+    
+    Dependencies:
+        - pandas: For DataFrame operations
+    
+    Notes:
+        - Expects input DataFrame to have pre-existing columns 'volb_X' and 'vola_X'
+        - Adds new columns 'rb_X' and 'ra_X' for each range value
+        - Ratios are calculated as individual volume divided by total (bid + ask) volume
+    """
     for r in rangos:
-        t_vol_10 = dw[f'volb_{r}']+dw[f'vola_{r}']    
-        dw[f'rb_{r}'] = dw[f'volb_{r}']/t_vol_10
-        dw[f'ra_{r}'] = dw[f'vola_{r}']/t_vol_10
+        # Calculate total volume at each range
+        t_vol_10 = dw[f'volb_{r}'] + dw[f'vola_{r}']
+        
+        # Calculate bid and ask ratios
+        dw[f'rb_{r}'] = dw[f'volb_{r}'] / t_vol_10
+        dw[f'ra_{r}'] = dw[f'vola_{r}'] / t_vol_10
+    
     return dw
 
 def heikin_ashi(df):
