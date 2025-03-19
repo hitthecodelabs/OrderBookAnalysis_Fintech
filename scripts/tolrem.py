@@ -726,11 +726,39 @@ def send_activity(coin, msg): ### group orders report
     bot = telegram.Bot(token=token) ### 1/8 bots 0.125 | to avoid to get timeout error
     bot.send_message(chat_id=channelID, text=msg)
 
-def alertaaaaa(bot='',
-               mensaje='Done!'
-                ):
+def alertaaaaa(bot='', mensaje='Done!'):
+    """
+    Sends a Telegram message using a bot.
+
+    This function initializes a Telegram bot with the provided token and sends
+    a message to a specified chat ID.
+
+    Parameters:
+        bot (str, optional): Telegram Bot API token. Defaults to empty string
+        mensaje (str, optional): Message text to send. Defaults to 'Done!'
+
+    Returns:
+        telegram.Message: The sent message object
+
+    Dependencies:
+        - telegram: Python Telegram Bot library (telegram.Bot)
+
+    Raises:
+        telegram.error.InvalidToken: If the bot token is invalid
+        telegram.error.NetworkError: If there's a network connectivity issue
+
+    Notes:
+        - Requires a valid Telegram Bot token
+        - Chat ID must be configured (currently missing in implementation)
+        - Replace <CHAT_ID> with actual chat ID value
+    """
+    # Initialize Telegram Bot with provided token
     bot = telegram.Bot(token=bot)
-    que = bot.send_message(chat_id=, text=mensaje)
+    
+    # Send message to specified chat ID
+    que = bot.send_message(chat_id=<CHAT_ID>, text=mensaje)  # Note: <CHAT_ID> needs actual value
+    
+    return que
 
 async def send_activity_2(msg): ### errors report
     tokens = []
