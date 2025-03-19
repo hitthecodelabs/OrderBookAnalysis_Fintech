@@ -464,15 +464,54 @@ def stts(dw,
     return dw
 
 def heikin_ashi(df):
-    heikin_ashi_df = pd.DataFrame(index=df.index.values, columns=['Open', 'High', 'Low', 'Close'])
-    heikin_ashi_df['Close'] = (df['Open'] + df['High'] + df['Low'] + df['Close']) / 4
+    """
+    Converts standard OHLC price data into Heikin-Ashi candlestick format.
+    
+    This function transforms traditional Open, High, Low, Close (OHLC) price data
+    into Heikin-Ashi format, which aims to filter out market noise and better
+    identify trends by smoothing price movements.
+    
+    Parameters:
+        df (pandas.DataFrame): Input DataFrame with columns:
+            'Open', 'High', 'Low', 'Close' containing price data
+    
+    Returns:
+        pandas.DataFrame: Heikin-Ashi transformed DataFrame with columns:
+            'Open', 'High', 'Low', 'Close' calculated using Heikin-Ashi formulas
+    
+    Dependencies:
+        - pandas (pd): For DataFrame operations
+    
+    Notes:
+        - Heikin-Ashi calculations:
+          - HA-Close = (Open + High + Low + Close) / 4
+          - HA-Open = (Previous HA-Open + Previous HA-Close) / 2
+          - HA-High = Maximum of HA-Open, HA-Close, or actual High
+          - HA-Low = Minimum of HA-Open, HA-Close, or actual Low
+        - First HA-Open uses the actual opening price
+    """
+    # Initialize output DataFrame with same index as input
+    heikin_ashi_df = pd.DataFrame(index=df.index.values, 
+                                columns=['Open', 'High', 'Low', 'Close'])
+    
+    # Calculate HA-Close as average of OHLC
+    heikin_ashi_df['Close'] = (df['Open'] + df['High'] + 
+                             df['Low'] + df['Close']) / 4
+    
+    # Calculate HA-Open iteratively
     for i in range(len(df)):
         if i == 0:
             heikin_ashi_df.iat[0, 0] = df['Open'].iloc[0]
         else:
-            heikin_ashi_df.iat[i, 0] = (heikin_ashi_df.iat[i-1, 0] + heikin_ashi_df.iat[i-1, 3]) / 2
-    heikin_ashi_df['High'] = heikin_ashi_df.loc[:, ['Open', 'Close']].join(df['High']).max(axis=1)
-    heikin_ashi_df['Low'] = heikin_ashi_df.loc[:, ['Open', 'Close']].join(df['Low']).min(axis=1)
+            heikin_ashi_df.iat[i, 0] = (heikin_ashi_df.iat[i-1, 0] + 
+                                      heikin_ashi_df.iat[i-1, 3]) / 2
+    
+    # Calculate HA-High and HA-Low using maximum/minimum of relevant prices
+    heikin_ashi_df['High'] = heikin_ashi_df.loc[:, ['Open', 'Close']].join(
+                           df['High']).max(axis=1)
+    heikin_ashi_df['Low'] = heikin_ashi_df.loc[:, ['Open', 'Close']].join(
+                          df['Low']).min(axis=1)
+    
     return heikin_ashi_df
 
 def ds_heikin_zz(failneim, 
