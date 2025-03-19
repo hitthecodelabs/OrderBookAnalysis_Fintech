@@ -2751,17 +2751,50 @@ class vannamei():
                         print("zzz |", diff.ctime())
                 sleep(0.1)
 
-
 def scaler_data(filename):
-    dscaler = pl.read_csv(filename.replace("model_", 'scaler_').replace('h5', 'csv'), sep="|")
-    # arr_sc = np.array(dscaler)
+    """
+    Loads a trained model and its corresponding scaler data from files.
+    
+    This function reads a CSV file containing scaler data, fits a StandardScaler,
+    loads a pre-trained model from an HDF5 file, and extracts timeframe information
+    from the filename.
+    
+    Parameters:
+        filename (str): Path to the model file (HDF5 format)
+            Expected format: e.g., 'model_futures_X_Ym.h5' where Y is timeframe in minutes
+    
+    Returns:
+        tuple: Contains:
+            - model: Loaded Keras model from HDF5 file
+            - scaler (StandardScaler): Fitted scaler object
+            - nm (int): Timeframe in minutes extracted from filename
+            - div_ (str): Futures identifier extracted from filename
+    
+    Dependencies:
+        - polars (pl): For CSV reading
+        - numpy (np): For array operations
+        - sklearn.preprocessing.StandardScaler: For data scaling
+        - tensorflow.keras.models.load_model: For model loading
+    
+    Notes:
+        - Expects corresponding scaler file with same base name but 'scaler_' prefix and '.csv' extension
+        - CSV file should use '|' as separator
+    """
+    # Read scaler data from CSV and convert to numpy array
+    scaler_filename = filename.replace("model_", 'scaler_').replace('h5', 'csv')
+    dscaler = pl.read_csv(scaler_filename, sep="|")
+    
+    # Fit StandardScaler to the data
     scaler = StandardScaler().fit(dscaler.to_numpy())
+    
+    # Load the pre-trained model
     model = load_model(filename)
-    # div = filename.replace("_2.", ".").split("_")[-1].split(".")[0]
+    
+    # Extract timeframe and identifier from filename
     div = filename.split("_")[-1].split(".")[0]
-    # print(div)
-    nm = int(div.replace('m', ""))
+    nm = int(div.replace('m', ""))  # Convert timeframe to integer (remove 'm')
     div_ = filename.split("futures_")[-1].split(".")[0]
+    
     return model, scaler, nm, div_
 
 def get_utilsss():
