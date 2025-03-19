@@ -37,6 +37,25 @@ import pathlib
 # from dropbox.exceptions import AuthError
 
 def truncate(f, n):
+    """
+    Truncates a floating-point number to a specified number of decimal places.
+    
+    This function performs truncation (rounding down) rather than traditional rounding.
+    It multiplies the input number by 10^n, takes the floor, and then divides by 10^n.
+    
+    Parameters:
+        f (float): The floating-point number to truncate
+        n (int): The number of decimal places to truncate to
+        
+    Returns:
+        float: The truncated number with n decimal places
+        
+    Examples:
+        >>> truncate(3.14159, 2)
+        3.14
+        >>> truncate(5.6789, 3)
+        5.678
+    """
     return np.floor(f * 10 ** n) / 10 ** n
 
 def perc_diff(b_arr, a_rr, lvl):
