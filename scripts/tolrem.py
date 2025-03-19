@@ -1731,10 +1731,43 @@ def bybit_request(**kwargs):
     return json.loads(response.text), response
 
 def update_sl(session, coin, new_sl, flag, stable='USDT'):
-    side0 = {'green':'Buy', 'red':'Sell'}
+    """
+    Updates the stop-loss price for an open trading position.
+
+    This function modifies the stop-loss level for a trading position on a 
+    cryptocurrency pair using the provided session object.
+
+    Parameters:
+        session: Trading session object with set_trading_stop method
+        coin (str): Base cryptocurrency symbol (e.g., 'BTC', 'ETH')
+        new_sl (float): New stop-loss price to set
+        flag (str): Position direction indicator ('green' for Buy, 'red' for Sell)
+        stable (str, optional): Stablecoin symbol. Defaults to 'USDT'
+
+    Returns:
+        int: Status code (0 indicates successful execution)
+
+    Dependencies:
+        - Assumes session object from a trading API (e.g., ccxt or similar)
+
+    Raises:
+        KeyError: If flag is not 'green' or 'red'
+        AttributeError: If session doesn't have set_trading_stop method
+        Exception: May raise trading API-specific errors
+
+    Notes:
+        - Symbol is constructed as coin + stable (e.g., 'BTCUSDT')
+        - 'green' indicates a long/buy position, 'red' indicates a short/sell position
+    """
+    # Map flag colors to trading sides
+    side0 = {'green': 'Buy', 'red': 'Sell'}
     side_w = side0[flag]
-    order2 = session.set_trading_stop(symbol=f"{coin}{stable}", 
-                                  side=side_w, stop_loss=new_sl)
+    
+    # Set new stop-loss for the specified symbol and side
+    order2 = session.set_trading_stop(symbol=f"{coin}{stable}",
+                                    side=side_w, 
+                                    stop_loss=new_sl)
+    
     return 0
     
 def upload_data(dpbx, filee, dst):
