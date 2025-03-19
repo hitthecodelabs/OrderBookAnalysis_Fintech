@@ -361,6 +361,35 @@ def cheeseBybit(jjbook,
             # limit=250
             ):
     
+    """
+    Processes Bybit order book data to calculate volume and price differences at various levels.
+    
+    This function analyzes order book data from Bybit exchange, computing bid/ask volumes
+    and percentage price differences at specified player levels, plus an additional 250-level point.
+    
+    Parameters:
+        jjbook (dict): Order book data containing 'b' (bids), 'a' (asks), and 'ts' (timestamp)
+        players (list, optional): List of order book depth levels to analyze. 
+            Defaults to [5, 10, 15, 20, 25, 30, 40, 50, 75, 100, 150, 200]
+        limit (int, optional): Maximum number of order book levels to consider. Defaults to 500
+        ms (None, optional): Unused parameter (maintained for compatibility). Defaults to None
+    
+    Returns:
+        tuple: Contains:
+            - tt (int): Timestamp from the order book
+            - linea (str): Formatted string with timestamp, spread, and volume/price data
+            - str: Exchange identifier ("Bybit")
+    
+    Dependencies:
+        - numpy (np): For array operations
+        - pump_it_up: Function to calculate bid/ask volumes
+        - perc_diff: Function to calculate percentage differences
+    
+    Notes:
+        - Input jjbook expected format: {'b': [[price, size], ...], 'a': [[price, size], ...], 'ts': timestamp}
+        - Output linea format: "timestamp|spread|B_vol1|A_vol1|b_diff1|a_diff1|...|B_vol250|A_vol250|b250|a250"
+    """
+    
     # bid_, ask_, dlevels = norm_order_book(depth) ### (b, a), (%b, %a; at 250 levels) ### dlevels => [:250]
     # bid, ask = real_levels2(bid_, ask_, levels=limit)
     ### [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 20, 25, 30, 35, 40, 45, 50, 100, 250]
